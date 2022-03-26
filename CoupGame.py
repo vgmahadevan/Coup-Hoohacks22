@@ -20,7 +20,7 @@ class CoupGame:
 
     def addPlayer(self, name):
         self.playerCount += 1
-        self.alive.append(player.name)
+        self.alive.append(CoupPlayer(name))
 
     def deal(self):
         for i in range(self.playerCount):
@@ -37,7 +37,9 @@ class CoupGame:
         self.displayAction(action, target)
         challenger = self.challenge(action, target)
         if challenger != -1:
-            resolveChallenge(challenger, player, action)
+            actionWentThrough = resolveChallenge(challenger, player, action)
+        self.currentPlayer += 1
+        self.currentPlayer %= self.playerCount
 
     def challenge(self, action, target):
         # Start timer
@@ -48,6 +50,26 @@ class CoupGame:
 
     def resolveChallenge(self, challenger, personChallenged, action):
         if (action in personChallenged.cards):
+            personChallenged.cards.remove(action)
+            self.deck.add(action)
+            personChallenged.cards.append(self.deck.draw)
+
+            self.loseCard(challenger)
+            return True
+        else:
+            self.loseCard(personChallenged)
+            return False
+
+    def loseCard(self, player):
+        player.lose_card()
+        if not player.isAlive:
+            self.playerCount -= 1
+            ind = self.alive.index(player)
+            self.dead.append(self.alive.pop(ind))
+            if ind == self.currentPlayer:
+                # to offset adding 1
+                self.currentPlayer -= 1
+
             
 
     def noSteal(self):
