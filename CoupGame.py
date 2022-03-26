@@ -1,5 +1,5 @@
-import CoupDeck
-import CoupPlayer
+from CoupDeck import CoupDeck
+from CoupPlayer import CoupPlayer
 
 class CoupGame:
     actionToString = {0: 'Tax',
@@ -39,21 +39,73 @@ class CoupGame:
         # assass must spend
         if action == 1:
             player.coins -= 3
+        if action == 7:
+            player.coins -= 7
 
+        # challenge
         challenger = self.challenge(action, target)
         if challenger:
             actionWentThrough = self.resolveChallenge(challenger, player, action)
+
+        # block
         if actionWentThrough:
             card, blocker = self.getBlocker(action, target)
             if card != -1:
                 actionWentThrough = False
+                # challenge block
                 challenger = self.challenge(card, blocker)
                 if challenger:
                     actionWentThrough = not self.resolveChallenge(challenger, blocker, card)
 
+        # execute
+        if actionWentThrough:
+            if action == 0:
+                self.tax(player)
+            elif action == 1:
+                self.assass(player, target)
+            elif action == 2:
+                self.exchange(player)
+            elif action == 3:
+                self.steal(player, target)
+            elif action == 5:
+                self.income(player)
+            elif action == 6:
+                self.foreignAid(player)
+            else:
+                self.coup(player, target)
 
         self.currentPlayer += 1
         self.currentPlayer %= self.playerCount
+
+    def tax(self, player):
+        player.coins += 3
+
+    def income(self, player):
+        player.coins += 1
+
+    def foreignAid(self, player):
+        player.coins += 2
+
+    def steal(self, player, target):
+        player.coins += 2
+        target.coins -= 2
+
+    def exchange(self, player):
+        newHand = []
+        toChoose = []
+        for card in player.cards:
+            if card == -2:
+                newHand.append(card)
+            else:
+                toChoose.append(card)
+        toChoose.append(self.deck.draw())
+        toChoose.append(self.deck.draw())
+        # Ask player which of the cards in toChoose they want
+        # Choose 2 - len(newHand) of them
+        # newHand.append(choice) for each choice
+        player.cards = newHand
+        
+        
 
     # getBlocker requires player input
     def getBlocker(action, target):
@@ -116,12 +168,13 @@ class CoupGame:
         # Return an integer corresponding to the action
         pass
 
+    # returns a player object
     def getTarget(self, action):
         if action == 1 or action == 7:
             return self.askForTarget()
         if action == 3:
             return self.askForTarget(True)
-        return -1
+        return None
 
     def displayTargets(self, listOfPlayers):
         pass
@@ -129,6 +182,7 @@ class CoupGame:
     def displayAction(self, action, target):
         pass
 
+    # returns a player object, requires input
     def askForTarget(self, captain = False):
         possibleTargets = []
         for i in range(self.playerCount):
@@ -136,8 +190,7 @@ class CoupGame:
                 possibleTargets.append(i)
         self.displayTargets(possibleTargets)
         # Placeholder
-        integer = -1
-        return integer
+        return None
 
     # player mentioned so that x assassinated y could be displayed
     def assass(self, player, target):
