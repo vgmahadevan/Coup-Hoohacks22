@@ -1,5 +1,5 @@
-import CoupDeck
-import CoupPlayer
+from CoupDeck import CoupDeck
+from CoupPlayer import CoupPlayer
 
 class CoupGame:
     actionToString = {0: 'Tax',
