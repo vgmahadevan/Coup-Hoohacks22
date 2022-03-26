@@ -32,7 +32,7 @@ class CoupGame:
         possibleActions = player.getActions()
         if (3 in possibleActions and self.noSteal()):
             possibleActions.remove(3)
-        action = CoupPlayer.getAction(possibleActions)
+        action = self.getChosenAct(possibleActions, player)
         target = self.getTarget(action)
         self.displayAction(action, target)
         challenger = self.challenge(action, target)
@@ -78,7 +78,7 @@ class CoupGame:
                 return False
         return True
 
-    def getAction(actions):
+    def getChosenAct(actions, player):
         # Ask player which action they want to take
         # Return an integer corresponding to the action
         pass
