@@ -57,7 +57,7 @@ class CoupGame:
         if action == 1:
             # Ask target if they want to block with contessa
             pass
-        else if action == 3:
+        elif action == 3:
             # Give all players a chance to block with captain or ambassador
             pass
         return -1, None
@@ -72,7 +72,7 @@ class CoupGame:
         if (action in personChallenged.cards):
             personChallenged.cards.remove(action)
             self.deck.add(action)
-            personChallenged.cards.append(self.deck.draw)
+            personChallenged.cards.append(self.deck.draw())
 
             self.loseCard(challenger)
             return True
@@ -86,7 +86,7 @@ class CoupGame:
             self.playerCount -= 1
             ind = self.alive.index(player)
             self.dead.append(self.alive.pop(ind))
-            if ind == self.currentPlayer:
+            if ind <= self.currentPlayer:
                 # to offset adding 1
                 self.currentPlayer -= 1
 
