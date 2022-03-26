@@ -32,12 +32,12 @@ class CoupGame:
         possibleActions = player.getActions()
         if (3 in possibleActions and self.noSteal()):
             possibleActions.remove(3)
-        action = getAction(possibleActions)
+        action = CoupPlayer.getAction(possibleActions)
         target = self.getTarget(action)
         self.displayAction(action, target)
         challenger = self.challenge(action, target)
         if challenger != -1:
-            actionWentThrough = resolveChallenge(challenger, player, action)
+            actionWentThrough = self.resolveChallenge(challenger, player, action)
         self.currentPlayer += 1
         self.currentPlayer %= self.playerCount
 
