@@ -1,7 +1,10 @@
 import discord
+import json
 import gamerunner
 
 client = discord.Client()
+auth = json.load(open('auth.json'))
+token = auth['discord-token']['token']
 
 class MyClient(discord.Client):
     async def on_ready(self):
@@ -11,8 +14,9 @@ class MyClient(discord.Client):
         if message.author == client.user:
             return
 
-        if message.content.lower == 'start chicken coop' or message.content.lower == 'c!start':
+        if message.content.lower() == 'start chicken coop' or message.content.lower() == 'c!start':
+            print('hi')
             await message.channel.send('Hello!')
 
 client = MyClient()
-client.run('OTU3MzY5MTcxODc0ODI0MjAy.Yj9xhQ.3lfLWE2SLUgBhWRDJqhRaKSoFKM')
+client.run(token)
