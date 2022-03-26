@@ -30,11 +30,16 @@ class CoupGame:
     def takeTurn(self):
         player = self.alive[self.currentPlayer]
         possibleActions = player.getActions()
+
         if (3 in possibleActions and self.noSteal()):
             possibleActions.remove(3)
         action = self.getChosenAct(possibleActions, player)
         target = self.getTarget(action)
         self.displayAction(action, target)
+        # assass must spend
+        if action == 1:
+            player.coins -= 3
+
         challenger = self.challenge(action, target)
         if challenger:
             actionWentThrough = self.resolveChallenge(challenger, player, action)
@@ -50,19 +55,27 @@ class CoupGame:
         self.currentPlayer += 1
         self.currentPlayer %= self.playerCount
 
+    # getBlocker requires player input
     def getBlocker(action, target):
         # returns card, blocker
         # card is integer
         # blocker is a player object
         if action == 1:
-            # Ask target if they want to block with contessa
+            # Ask target if they want to block with contessa (card 4)
             pass
         elif action == 3:
-            # Give all players a chance to block with captain or ambassador
+            # Give all players a chance to block with captain (card 3) or ambassador (card 2)
             pass
+        elif action == 6:
+            # Give all players a chance to block with duke (card 0)
+            pass
+
         return -1, None
 
+    # challenge method requires player input
     def challenge(self, action, target):
+        if action > 4:
+            return None
         # Start timer
         # If someone clicks challenge in that time, that player object
         # Otherwise return None
@@ -90,12 +103,14 @@ class CoupGame:
                 # to offset adding 1
                 self.currentPlayer -= 1
 
+    # return true if you CAN'T steal at all
     def noSteal(self):
         for i in range(self.playerCount):
             if (i != self.currentPlayer and self.alive[i].coins > 0):
                 return False
         return True
 
+    # getChosenAct requires player input
     def getChosenAct(actions, player):
         # Ask player which action they want to take
         # Return an integer corresponding to the action
