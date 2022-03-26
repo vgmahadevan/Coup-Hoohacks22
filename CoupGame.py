@@ -32,21 +32,41 @@ class CoupGame:
         possibleActions = player.getActions()
         if (3 in possibleActions and self.noSteal()):
             possibleActions.remove(3)
-        action = CoupPlayer.getAction(possibleActions)
+        action = self.getAction(possibleActions, player)
         target = self.getTarget(action)
         self.displayAction(action, target)
         challenger = self.challenge(action, target)
-        if challenger != -1:
+        if challenger:
             actionWentThrough = self.resolveChallenge(challenger, player, action)
+        if actionWentThrough:
+            card, blocker = self.getBlocker(action, target)
+            if card != -1:
+                actionWentThrough = False
+                challenger = self.challenge(card, blocker)
+                if challenger:
+                    actionWentThrough = not self.resolveChallenge(challenger, blocker, card)
+
+
         self.currentPlayer += 1
         self.currentPlayer %= self.playerCount
 
+    def getBlocker(action, target):
+        # returns card, blocker
+        # card is integer
+        # blocker is a player object
+        if action == 1:
+            # Ask target if they want to block with contessa
+            pass
+        else if action == 3:
+            # Give all players a chance to block with captain or ambassador
+            pass
+        return -1, None
+
     def challenge(self, action, target):
         # Start timer
-        # If someone clicks challenge in that time, return the index of that player
-        # in the self.alive list
-        # Otherwise return -1
-        return -1
+        # If someone clicks challenge in that time, that player object
+        # Otherwise return None
+        return None
 
     def resolveChallenge(self, challenger, personChallenged, action):
         if (action in personChallenged.cards):
@@ -70,15 +90,13 @@ class CoupGame:
                 # to offset adding 1
                 self.currentPlayer -= 1
 
-            
-
     def noSteal(self):
         for i in range(self.playerCount):
             if (i != self.currentPlayer and self.alive[i].coins > 0):
                 return False
         return True
 
-    def getAction(actions):
+    def getAction(actions, player):
         # Ask player which action they want to take
         # Return an integer corresponding to the action
         pass
