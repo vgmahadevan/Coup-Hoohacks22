@@ -138,6 +138,15 @@ class CoupGame:
         # Placeholder
         integer = -1
         return integer
+
+    # player mentioned so that x assassinated y could be displayed
+    def assass(self, player, target):
+        self.loseCard(target)
+
+    # player mentioned so that x couped y could be displayed
+    def coup(self, player, target):
+        self.loseCard(target)
+
             
 
 
