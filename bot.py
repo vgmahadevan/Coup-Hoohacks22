@@ -112,9 +112,8 @@ class GameClient(discord.Client):
                 
                 if str(reaction.emoji) in [num for i, num in enumerate(NUMREACTS) if i in posActs]:
                     player_choice = NUMREACTS.index(str(reaction.emoji))
-                
-                self.game_inst.takeTurn(player_choice)
-                print(player_choice)
+                    choice_emb = discord.Embed(title=f"{ALLACTIONS[player_choice][3:]}", description=f"you have chosen (to) {ALLACTIONS[player_choice]}!", color=CHICKENCOLOR)
+                    await choice_msg.edit(embed=choice_emb)
                 
 client = GameClient()
 client.run(token)
