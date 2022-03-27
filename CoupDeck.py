@@ -13,6 +13,6 @@ class CoupDeck:
 
     def add(self, card1, card2 = -1):
         self.deck.append(card1)
-        if card2 != -1:
+        if card2 >= -1:
             self.deck.append(card2)
         random.shuffle(self.deck)
