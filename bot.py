@@ -4,6 +4,7 @@ import discord
 import json
 from CoupGame import CoupGame
 import asyncio
+import math
 
 auth = json.load(open('auth.json'))
 token = auth['discord-token']['token']
@@ -11,7 +12,7 @@ token = auth['discord-token']['token']
 NUMREACTS = ['0️⃣','1️⃣','2️⃣','3️⃣', '4', '5️⃣','6️⃣','7️⃣']
 ALLACTIONS = ['0: Tax', '1: Assassinate', '2: Exchange', '3: Steal', '4: blank', '5: Income', '6: Foreign Aid', '7: Coup']
 CHICKENCOLOR = 0xF4E8A4
-GAMECARDS = ["duke", "assassin", "ambassador", "captain", "contessa"]
+GAMECARDS = ["Duke", "Assassin", "Ambassador", "Captain", "Contessa"]
 cardnums = ['🅰', '🅱']
 
 class GameClient(discord.Client):
@@ -62,11 +63,11 @@ class GameClient(discord.Client):
 
         if message.content.lower() == 'start chicken coop' or message.content.lower() == 'c!start':
             if self.game_running:
-                await message.channel.send(embed=discord.Embed(title="smh", description="there is alr a game running dumbass", color=CHICKENCOLOR))
+                await message.channel.send(embed=discord.Embed(title="smh", description="There is already a game running!", color=CHICKENCOLOR))
             else:
                 self.game_running = True
                 self.game_inst = CoupGame()
-                q_emb = discord.Embed(title="new game :D", description="react 🥚 to join game!\nreact 🐣 to start!", color=CHICKENCOLOR)
+                q_emb = discord.Embed(title="New game :D", description="React 🥚 to join game!\nReact 🐣 to start!", color=CHICKENCOLOR)
                 embm = await message.channel.send(embed=q_emb)
                 await embm.add_reaction("🥚")
                 await embm.add_reaction("🐣")
@@ -75,7 +76,7 @@ class GameClient(discord.Client):
                 try:
                     reaction, user = await self.wait_for("reaction_add", check=lambda r, u: u == message.author and str(r.emoji) in "🐣", timeout=20)
                 except asyncio.TimeoutError:
-                    q_emb = discord.Embed(title="D:", description="game start timed out D:", color=CHICKENCOLOR)
+                    q_emb = discord.Embed(title="D:", description="Game start timed out D:", color=CHICKENCOLOR)
                     await embm.edit(embed=q_emb)
                     self.game_running = False
                     self.inq = False
@@ -86,13 +87,23 @@ class GameClient(discord.Client):
                 if str(reaction.emoji) == "🐣":
                     self.cur_q = None
                     self.in_q = False
-                    q_emb = discord.Embed(title=":D", description="game start", color=CHICKENCOLOR)
+                    q_emb = discord.Embed(title=":D", description="Game start!", color=CHICKENCOLOR)
                     self.game_channel = message.channel
                     await embm.edit(embed=q_emb)
                 
                 self.game_inst.deal()
                 for i, plyr in enumerate(self.players):
-                    await plyr.send(f"your cards are a. {GAMECARDS[self.game_inst.alive[i].cards[0]]} and b. {GAMECARDS[self.game_inst.alive[i].cards[1]]}")
+                    await plyr.send(f"Your cards are a. {GAMECARDS[self.game_inst.alive[i].cards[0]]} and b. {GAMECARDS[self.game_inst.alive[i].cards[1]]}")
+
+
+                    cardsHave = [0]*5
+                    for card in self.game_inst.alive[i].cards:
+                        cardsHave[card] += 1
+
+                    for card in range(5):
+                        prob = 1 - math.comb(11, 3 - cardsHave[card]) / math.comb(13, 3 - cardsHave[card])
+                        await plyr.send(f"Probability a certain other player has at least one {GAMECARDS[card]} is {prob}")
+
                 self.bg_game = self.loop.create_task(self.run_game())
 
     async def run_game(self):
@@ -115,13 +126,13 @@ class GameClient(discord.Client):
                     self.challenged = None
                     return
 
-                await self.game_channel.send(f"it is now your turn, {self.game_inst.alive[self.game_inst.currentPlayer].name}")
+                await self.game_channel.send(f"It is now your turn, {self.game_inst.alive[self.game_inst.currentPlayer].name}")
                 posActs = self.game_inst.alive[self.game_inst.currentPlayer].getActions()
                 if 3 in posActs and self.game_inst.noSteal():
                     posActs.remove(3)
                 toDisplay = "\n".join([act for i, act in enumerate(ALLACTIONS) if i in posActs])
                 choice_emb = discord.Embed(title=f"{self.game_inst.alive[self.game_inst.currentPlayer].name}'s turn",
-                                            description=f"here are your possible moves...\n{toDisplay}",
+                                            description=f"Here are your possible moves...\n{toDisplay}",
                                             color=CHICKENCOLOR)
                 choice_msg = await self.game_channel.send(embed=choice_emb)
                 for i, num in enumerate(NUMREACTS):
@@ -133,12 +144,12 @@ class GameClient(discord.Client):
                 try:
                     reaction, user = await self.wait_for("reaction_add", check=lambda r, u: u.id == self.players[self.game_inst.currentPlayer].id and str(r.emoji) in [num for i, num in enumerate(NUMREACTS) if i in posActs], timeout=15)
                 except asyncio.TimeoutError:
-                    choice_emb = discord.Embed(title="D:", description="time's up! default choice is chosen for you", color=CHICKENCOLOR)
+                    choice_emb = discord.Embed(title="D:", description="Time's up! The default choice has been selected for you", color=CHICKENCOLOR)
                     await choice_msg.edit(embed=choice_emb)
                 
                 if reaction and str(reaction.emoji) in [num for i, num in enumerate(NUMREACTS) if i in posActs]:
                     player_choice = NUMREACTS.index(str(reaction.emoji))
-                    choice_emb = discord.Embed(title=f"{ALLACTIONS[player_choice][3:]}", description=f"you have chosen (to) {ALLACTIONS[player_choice]}!", color=CHICKENCOLOR)
+                    choice_emb = discord.Embed(title=f"{ALLACTIONS[player_choice][3:]}", description=f"You have chosen (to) {ALLACTIONS[player_choice]}!", color=CHICKENCOLOR)
                     await choice_msg.edit(embed=choice_emb)
                 
                 posTargs = []
@@ -158,7 +169,7 @@ class GameClient(discord.Client):
                     for targ, plyr in enumerate(self.players):
                         if targ in posTargs:
                             tcStr += f'\n{targ}: {plyr.name}'
-                    target_emb = discord.Embed(title=f"select a target to influence", description=f"here are all ur possible targets!\n{tcStr}", color=CHICKENCOLOR)
+                    target_emb = discord.Embed(title=f"Select a target to influence", description=f"Here are all your possible targets!\n{tcStr}", color=CHICKENCOLOR)
                     target_msg = await self.game_channel.send(embed=target_emb)
                     for i, num in enumerate(NUMREACTS):
                         if i in posTargs:
@@ -168,12 +179,12 @@ class GameClient(discord.Client):
                     try:
                         reaction, user = await self.wait_for("reaction_add", check=lambda r, u: u.id == self.players[self.game_inst.currentPlayer].id and str(r.emoji) in [num for i, num in enumerate(NUMREACTS) if i in posTargs], timeout=15)
                     except asyncio.TimeoutError:
-                        target_emb = discord.Embed(title="D:", description="time's up! default choice is chosen for you", color=CHICKENCOLOR)
+                        target_emb = discord.Embed(title="D:", description="Time's up! The default choice has been selected for you", color=CHICKENCOLOR)
                         await target_msg.edit(embed=target_emb)
 
                     if str(reaction.emoji) in [num for i, num in enumerate(NUMREACTS) if i in posTargs]:
                         targ_choice = NUMREACTS.index(str(reaction.emoji))
-                        target_emb = discord.Embed(title=f"{ALLACTIONS[player_choice][3:]} {self.players[targ_choice].name}", description=f"you have chosen to target {self.players[targ_choice].name}!", color=CHICKENCOLOR)
+                        target_emb = discord.Embed(title=f"{ALLACTIONS[player_choice][3:]} {self.players[targ_choice].name}", description=f"You have chosen to target {self.players[targ_choice].name}!", color=CHICKENCOLOR)
                         await target_msg.edit(embed=target_emb)
 
                     self.game_inst.takeTurn(player_choice)
@@ -205,8 +216,8 @@ class GameClient(discord.Client):
                     continue
 
                 if player_choice == 1:
-                    block_emb = discord.Embed(title=f"block {self.game_inst.alive[self.game_inst.currentPlayer].name}?",
-                                                description=f"{target.name} react 🛑 to block with contessa",
+                    block_emb = discord.Embed(title=f"Block {self.game_inst.alive[self.game_inst.currentPlayer].name}?",
+                                                description=f"{target.name} React 🛑 to block with Contessa",
                                                 color=CHICKENCOLOR)
                     block_msg = await self.game_channel.send(embed=block_emb)
                     await block_msg.add_reaction('🛑')
@@ -224,8 +235,8 @@ class GameClient(discord.Client):
                         inc()
                         continue
                     
-                    succ_emb = discord.Embed(title=f"you have been assassinated!",
-                                    description=f"{target.name} please select which card to lose",
+                    succ_emb = discord.Embed(title=f"You have been assassinated!",
+                                    description=f"{target.name}, please select which card to lose",
                                     color=CHICKENCOLOR)
 
                     succ_msg = await self.game_channel.send(embed=succ_emb)
@@ -235,7 +246,7 @@ class GameClient(discord.Client):
                     try:
                         reaction, user = await self.wait_for("reaction_add", check=lambda r, u: u.id == self.players[[plyr.name for plyr in self.players].index(target.name)].id and str(r.emoji) in cardnums[:target.numCards], timeout=15)
                     except asyncio.TimeoutError:
-                        succ_emb = discord.Embed(title="D:", description="time's up! default choice is chosen for you", color=CHICKENCOLOR)
+                        succ_emb = discord.Embed(title="D:", description="Time's up! The default choice has been selected for you", color=CHICKENCOLOR)
                         await succ_msg.edit(embed=succ_emb)
 
 
@@ -243,7 +254,7 @@ class GameClient(discord.Client):
                         lose_choice = 0 if str(reaction.emoji) == "🅰" else 1
 
                     lost_emb = discord.Embed(title=f"{self.players[targ_choice].name} lost a card",
-                                        description=f"you lost {GAMECARDS[target.cards[lose_choice]]}",
+                                        description=f"You lost {GAMECARDS[target.cards[lose_choice]]}",
                                         color=CHICKENCOLOR)
                     passed = await self.game_channel.send(embed=lost_emb)
                     
@@ -254,7 +265,7 @@ class GameClient(discord.Client):
                     self.game_inst.loseCard(target, lose_choice)
 
                     if target not in self.game_inst.alive:
-                        dead_emb = discord.Embed(title=f"you dead",
+                        dead_emb = discord.Embed(title=f"You are dead",
                                             description=f"{self.players[targ_choice].name} is now ghosty 👻",
                                             color=CHICKENCOLOR)
                         await self.game_channel.send(embed=dead_emb)
@@ -273,11 +284,11 @@ class GameClient(discord.Client):
                     card_show = f"a. {GAMECARDS[self.game_inst.alive[self.game_inst.currentPlayer].cards[0]]}"
                     if to_swap == 2:
                         card_show += f" and b. {GAMECARDS[self.game_inst.alive[self.game_inst.currentPlayer].cards[1]]}"
-                    await self.players[self.game_inst.currentPlayer].send(f"your cards are now {card_show}")
+                    await self.players[self.game_inst.currentPlayer].send(f"Your cards are now {card_show}")
                     inc()
                 elif player_choice == 3:
-                    block_emb = discord.Embed(title=f"block {self.game_inst.alive[self.game_inst.currentPlayer].name}?",
-                                                description=f"anyone react 🧢 to block with captain or 🍑 to block with ambassador",
+                    block_emb = discord.Embed(title=f"Block {self.game_inst.alive[self.game_inst.currentPlayer].name}?",
+                                                description=f"Anyone react 🧢 to block with Captain or 🍑 to block with Ambassador",
                                                 color=CHICKENCOLOR)
                     block_msg = await self.game_channel.send(embed=block_emb)
                     await block_msg.add_reaction('🧢')
@@ -298,16 +309,19 @@ class GameClient(discord.Client):
                     self.game_inst.alive[self.game_inst.currentPlayer].coins += min(2, target.coins)
                     target.coins -= min(2, target.coins)
 
-                    if not passed:
-                        inc()
-                        continue
-                    passed = True
+                    #if not passed:
+                    #    inc()
+                    #    continue
+                    #passed = True
+                    inc()
+                    continue
+
                 elif player_choice == 5:
                     self.game_inst.alive[self.game_inst.currentPlayer].coins += 1
                     inc()
                 elif player_choice == 6:
-                    block_emb = discord.Embed(title=f"block {self.game_inst.alive[self.game_inst.currentPlayer].name}?",
-                                                description=f"anyone react 🛑 to block with duke",
+                    block_emb = discord.Embed(title=f"Block {self.game_inst.alive[self.game_inst.currentPlayer].name}?",
+                                                description=f"Anyone react 🛑 to block with Duke",
                                                 color=CHICKENCOLOR)
                     block_msg = await self.game_channel.send(embed=block_emb)
                     await block_msg.add_reaction('🛑')
@@ -334,8 +348,8 @@ class GameClient(discord.Client):
 
                     lose_choice = 0
 
-                    succ_emb = discord.Embed(title=f"you have been chicken cooped!",
-                                        description=f"{target.name} please select which card to lose",
+                    succ_emb = discord.Embed(title=f"You have been chicken cooped!",
+                                        description=f"{target.name}, please select which card to lose",
                                         color=CHICKENCOLOR)
                     succ_msg = await self.game_channel.send(embed=succ_emb)
                     for card in range(len(target.cards) - 1):
@@ -344,21 +358,21 @@ class GameClient(discord.Client):
                     try:
                         reaction, user = await self.wait_for("reaction_add", check=lambda r, u: u.id == self.players[targ_choice].id and str(r.emoji) in cardnums[:target.numCards], timeout=15)
                     except asyncio.TimeoutError:
-                        succ_emb = discord.Embed(title="D:", description="time's up! default choice is chosen for you", color=CHICKENCOLOR)
+                        succ_emb = discord.Embed(title="D:", description="Time's up! The default choice has been selected for you", color=CHICKENCOLOR)
                         await succ_msg.edit(embed=succ_emb)
 
                     if str(reaction.emoji) in [card for num, card in enumerate(cardnums) if num in range(len(target.cards) - 1)]:
                         lose_choice = 0 if str(reaction.emoji) == "🅰" else 1
 
                     lost_emb = discord.Embed(title=f"{target.name} lost a card!",
-                                        description=f"you lost {GAMECARDS[target.cards[lose_choice]]}",
+                                        description=f"You lost {GAMECARDS[target.cards[lose_choice]]}",
                                         color=CHICKENCOLOR)
                     await self.game_channel.send(embed=lost_emb)
 
                     self.game_inst.loseCard(target, lose_choice)
                     inc()
                     if target not in self.game_inst.alive:
-                        dead_emb = discord.Embed(title=f"you dead",
+                        dead_emb = discord.Embed(title=f"You are dead",
                                             description=f"{target.name} is now ghosty 👻",
                                             color=CHICKENCOLOR)
                         await self.game_channel.send(embed=dead_emb)
@@ -367,8 +381,8 @@ class GameClient(discord.Client):
                 
 
     async def challenge(self, challenged, player_choice):
-        challenge_emb = discord.Embed(title=f"challenge {challenged.name}?",
-                                                description=f"react ⁉ to challenge {challenged.name}",
+        challenge_emb = discord.Embed(title=f"Challenge {challenged.name}?",
+                                                description=f"React ⁉ to challenge {challenged.name}",
                                                 color=CHICKENCOLOR)
         challenge_msg = await self.game_channel.send(embed=challenge_emb)
         self.cur_q = challenge_msg.id
@@ -382,8 +396,8 @@ class GameClient(discord.Client):
         if self.challenger:
             test_challenge = self.game_inst.resolveChallenge(self.challenger, challenged, player_choice) 
             if test_challenge:
-                succ_emb = discord.Embed(title=f"your challenge has failed!",
-                                    description=f"{self.challenger.name} please select which card to lose",
+                succ_emb = discord.Embed(title=f"Your challenge has failed!",
+                                    description=f"{self.challenger.name}, please select which card to lose",
                                     color=CHICKENCOLOR)
                 succ_msg = await self.game_channel.send(embed=succ_emb)
                 for card in range(len(self.challenger.cards)):
@@ -392,7 +406,7 @@ class GameClient(discord.Client):
                 try:
                     reaction, user = await self.wait_for("reaction_add", check=lambda r, u: u.id == self.players[[plyr.name for plyr in self.players].index(self.challenger.name)].id and str(r.emoji) in cardnums[:self.challenger.numCards], timeout=15)
                 except asyncio.TimeoutError:
-                    succ_emb = discord.Embed(title="D:", description="time's up! default choice is chosen for you", color=CHICKENCOLOR)
+                    succ_emb = discord.Embed(title="D:", description="Time's up! The default choice has been selected for you", color=CHICKENCOLOR)
                     await succ_msg.edit(embed=succ_emb)
 
 
@@ -400,14 +414,14 @@ class GameClient(discord.Client):
                     lose_choice = 0 if str(reaction.emoji) == "🅰" else 1
 
                 lost_emb = discord.Embed(title=f"{self.challenger.name} lost a card",
-                                    description=f"you lost {GAMECARDS[self.challenger.cards[lose_choice]]}",
+                                    description=f"You lost {GAMECARDS[self.challenger.cards[lose_choice]]}",
                                     color=CHICKENCOLOR)
                 await self.game_channel.send(embed=lost_emb)
 
                 self.game_inst.loseCard(self.challenger, lose_choice)
 
                 if self.challenger not in self.game_inst.alive:
-                    dead_emb = discord.Embed(title=f"you dead",
+                    dead_emb = discord.Embed(title=f"You are dead",
                                         description=f"{self.challenger.name} is now ghosty 👻",
                                         color=CHICKENCOLOR)
                     await self.game_channel.send(embed=dead_emb)
@@ -415,8 +429,8 @@ class GameClient(discord.Client):
                     self.challenger = None
                     self.challenged = None
             else:
-                succ_emb = discord.Embed(title=f"your challenge has been successful!",
-                                    description=f"{challenged.name} please select which card to lose",
+                succ_emb = discord.Embed(title=f"Your challenge has been successful!",
+                                    description=f"{challenged.name}, please select which card to lose",
                                     color=CHICKENCOLOR)
                 succ_msg = await self.game_channel.send(embed=succ_emb)
                 for card in range(len(challenged.cards)):
@@ -425,21 +439,21 @@ class GameClient(discord.Client):
                 try:
                     reaction, user = await self.wait_for("reaction_add", check=lambda r, u: u.id == self.players[[plyr.name for plyr in self.players].index(self.challenged.name)].id and str(r.emoji) in cardnums[:challenged.numCards], timeout=15)
                 except asyncio.TimeoutError:
-                    succ_emb = discord.Embed(title="D:", description="time's up! default choice is chosen for you", color=CHICKENCOLOR)
+                    succ_emb = discord.Embed(title="D:", description="Time's up! The default choice has been selected for you", color=CHICKENCOLOR)
                     await succ_msg.edit(embed=succ_emb)
 
                 if str(reaction.emoji) in [card for num, card in enumerate(cardnums) if num in range(len(challenged.cards))]:
                     lose_choice = 0 if str(reaction.emoji) == "🅰" else 1
 
                 lost_emb = discord.Embed(title=f"{challenged.name} lost a card",
-                                    description=f"you lost {GAMECARDS[challenged.cards[lose_choice]]}",
+                                    description=f"You lost {GAMECARDS[challenged.cards[lose_choice]]}",
                                     color=CHICKENCOLOR)
                 await self.game_channel.send(embed=lost_emb)
 
                 self.game_inst.loseCard(challenged, lose_choice)
 
                 if crplyr not in self.game_inst.alive:
-                    dead_emb = discord.Embed(title=f"you dead",
+                    dead_emb = discord.Embed(title=f"You are dead",
                                         description=f"{crplyr.name} is now ghosty 👻",
                                         color=CHICKENCOLOR)
                     await self.game_channel.send(embed=dead_emb)
