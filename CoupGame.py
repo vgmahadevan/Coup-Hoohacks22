@@ -29,21 +29,16 @@ class CoupGame:
             self.alive[i].cards[0] = self.deck.draw()
             self.alive[i].cards[1] = self.deck.draw()
 
-    def takeTurn(self):
+    def takeTurn(self, action):
         player = self.alive[self.currentPlayer]
-        possibleActions = player.getActions()
-
-        if (3 in possibleActions and self.noSteal()):
-            possibleActions.remove(3)
-        action = self.getChosenAct(possibleActions, player)
-        target = self.getTarget(action)
-        self.displayAction(action, target)
         # assass must spend
         if action == 1:
             player.coins -= 3
         if action == 7:
             player.coins -= 7
 
+    def temp(self, action, target):
+        player = self.alive[self.currentPlayer]
         # challenge
         challenger = self.challenge(action, player)
         if challenger:
@@ -155,19 +150,22 @@ class CoupGame:
         return None
 
     def resolveChallenge(self, challenger, personChallenged, action):
+        # print(action)
+        # print(personChallenged.cards)
         if (action in personChallenged.cards):
+            # print("hi")
             personChallenged.cards.remove(action)
             self.deck.add(action)
             personChallenged.cards.append(self.deck.draw())
 
-            self.loseCard(challenger)
+            # self.loseCard(challenger)
             return True
         else:
-            self.loseCard(personChallenged)
+            # self.loseCard(personChallenged)
             return False
 
-    def loseCard(self, player):
-        lostCard = player.lose_card()
+    def loseCard(self, player, card):
+        lostCard = player.lose_card(card)
         self.cardsRemoved[lostCard] += 1
         if not player.isAlive:
             self.playerCount -= 1
@@ -195,7 +193,7 @@ class CoupGame:
         if action == 1 or action == 7:
             return self.askForTarget()
         if action == 3:
-            return self.askForTarget(True)
+            return self.askForTarget(captain=True)
         return None
 
     def displayTargets(self, listOfPlayers):

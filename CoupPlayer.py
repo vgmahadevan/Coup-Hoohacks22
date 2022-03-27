@@ -9,24 +9,16 @@ class CoupPlayer:
     def die(self):
         self.isAlive = False
 
-    def lose_card(self):
-        # gets card player wants to lose from terminal
-        lost = int(input("Lose what card?"))
-
-        # check if the card is possible
-        if(lost==-2 or lost not in self.cards):
-            print("Try again!")
-            self.lose_card()
+    def lose_card(self, lost):
+        # replace the card with the "dead" card
+        self.numCards -= 1
+        if(lost==self.cards[0]):
+            self.cards[0] = -2
         else:
-            # replace the card with the "dead" card
-            self.numCards -= 1
-            if(lost==self.cards[0]):
-                self.cards[0] = -2
-            else:
-                self.cards[1] = -2
+            self.cards[1] = -2
         
         #check if player is alive
-        if(self.numCards == 0):
+        if(self.numCards <= 0):
             self.die()
 
         return lost
