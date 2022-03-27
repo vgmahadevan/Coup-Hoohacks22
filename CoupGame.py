@@ -1,6 +1,7 @@
 from turtle import pos
 from CoupDeck import CoupDeck
 from CoupPlayer import CoupPlayer
+import math
 
 class CoupGame:
     actionToString = {0: 'Tax',
@@ -17,6 +18,7 @@ class CoupGame:
         # Lists of names
         self.alive = []
         self.dead = []
+        self.cardsRemoved = [0,0,0,0,0]
         self.deck = CoupDeck()
 
     def addPlayer(self, name):
@@ -47,7 +49,7 @@ class CoupGame:
             player.coins -= 7
 
         # challenge
-        challenger = self.challenge(action, target)
+        challenger = self.challenge(action, player)
         if challenger:
             actionWentThrough = self.resolveChallenge(challenger, player, action)
 
@@ -140,7 +142,19 @@ class CoupGame:
     def challenge(self, action, target):
         if action > 4:
             return None
+        ind = self.alive.index(target)
         # Start timer
+        # send this message to each player:
+        for i in range(self.playerCount):
+            if i != ind:
+                numLeft = 3 - self.cardsRemoved[action]
+                totalLeft = 15 - sum(self.cardsRemoved) - self.alive[i].numCards - target.numCards
+                for card in self.alive[i]:
+                    if card == action:
+                        numLeft -= 1
+                prob = 1 - math.comb(totalLeft, numLeft) / math.comb(totalLeft + target.numCards, numLeft)
+                # tell alive[i]
+                pass
         # If someone clicks challenge in that time, that player object
         # Otherwise return None
         return None
@@ -158,7 +172,8 @@ class CoupGame:
             return False
 
     def loseCard(self, player):
-        player.lose_card()
+        lostCard = player.lose_card()
+        self.cardsRemoved[lostCard] += 1
         if not player.isAlive:
             self.playerCount -= 1
             ind = self.alive.index(player)
