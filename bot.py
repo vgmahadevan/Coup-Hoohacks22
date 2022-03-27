@@ -90,6 +90,8 @@ class GameClient(discord.Client):
             while not self.is_closed():
                 await self.game_channel.send(f"it is now your turn, {self.game_inst.alive[self.game_inst.currentPlayer].name}")
                 posActs = self.game_inst.alive[self.game_inst.currentPlayer].getActions()
+                if 3 in posActs and self.gameInst.noSteal():
+                    posActs.remove(3)
                 toDisplay = "\n".join([act for i, act in enumerate(ALLACTIONS) if i in posActs])
                 choice_emb = discord.Embed(title=f"{self.game_inst.alive[self.game_inst.currentPlayer].name}'s turn",
                                             description=f"here are your possible moves...\n{toDisplay}",
