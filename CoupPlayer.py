@@ -28,6 +28,8 @@ class CoupPlayer:
         #check if player is alive
         if(self.numCards == 0):
             self.die()
+
+        return lost
     
     def getActions(self):
         if self.coins < 3:
