@@ -104,7 +104,14 @@ class CoupGame:
         # Choose 2 - len(newHand) of them
         # newHand.append(choice) for each choice
         player.cards = newHand
-        
+
+        # player mentioned so that x assassinated y could be displayed
+    def assass(self, player, target):
+        self.loseCard(target)
+
+    # player mentioned so that x couped y could be displayed
+    def coup(self, player, target):
+        self.loseCard(target)    
         
 
     # getBlocker requires player input
@@ -191,6 +198,9 @@ class CoupGame:
         self.displayTargets(possibleTargets)
         # Placeholder
         return None
+
+
+
             
 
 
