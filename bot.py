@@ -7,6 +7,9 @@ import asyncio
 auth = json.load(open('auth.json'))
 token = auth['discord-token']['token']
 
+NUMREACTS = ['0️⃣','1️⃣','2️⃣','3️⃣','5️⃣','6️⃣','7️⃣']
+CHICKENCOLOR = 0xF4E8A4
+
 class GameClient(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -16,6 +19,7 @@ class GameClient(discord.Client):
         self.cur_q = None
         self.player_count = 0
         self.players = []
+        self.game_channel = None
 
     async def on_ready(self):
         print(f'We have logged in as {client.user}')
@@ -44,11 +48,11 @@ class GameClient(discord.Client):
 
         if message.content.lower() == 'start chicken coop' or message.content.lower() == 'c!start':
             if self.game_running:
-                await message.channel.send(embed=discord.Embed(title="smh", description="there is alr a game running dumbass", color=0xF4E8A4))
+                await message.channel.send(embed=discord.Embed(title="smh", description="there is alr a game running dumbass", color=CHICKENCOLOR))
             else:
                 self.game_running = True
                 self.game_inst = CoupGame()
-                q_emb = discord.Embed(title="new game :D", description="react 🥚 to join game!\nreact 🐣 to start!", color=0xF4E8A4)
+                q_emb = discord.Embed(title="new game :D", description="react 🥚 to join game!\nreact 🐣 to start!", color=CHICKENCOLOR)
                 embm = await message.channel.send(embed=q_emb)
                 await embm.add_reaction("🥚")
                 await embm.add_reaction("🐣")
@@ -57,7 +61,7 @@ class GameClient(discord.Client):
                 try:
                     reaction, user = await self.wait_for("reaction_add", check=lambda r, u: u == message.author and str(r.emoji) in "🐣", timeout=20)
                 except asyncio.TimeoutError:
-                    q_emb = discord.Embed(title="D:", description="game start timed out D:", color=0xF4E8A4)
+                    q_emb = discord.Embed(title="D:", description="game start timed out D:", color=CHICKENCOLOR)
                     await embm.edit(embed=q_emb)
                     self.game_running = False
                     self.inq = False
@@ -68,13 +72,29 @@ class GameClient(discord.Client):
                 if str(reaction.emoji) == "🐣":
                     self.cur_q = None
                     self.in_q = False
-                    q_emb = discord.Embed(title=":D", description="game start", color=0xF4E8A4)
+                    q_emb = discord.Embed(title=":D", description="game start", color=CHICKENCOLOR)
+                    self.game_channel = message.channel
                     await embm.edit(embed=q_emb)
                 
                 cards = ["duke", "assassin", "ambassador", "captain", "contessa"]
                 self.game_inst.deal()
                 for i, plyr in enumerate(self.players):
                     await plyr.send(f"your cards are {cards[self.game_inst.alive[i].cards[0]]} and {cards[self.game_inst.alive[i].cards[1]]}")
+                self.bg_game = self.loop.create_task(self.run_game())
 
+    async def run_game(self):
+        await self.wait_until_ready()
+        if self.game_running:
+            while not self.is_closed():
+                print('hi')
+                await self.game_channel.send(f"it is now your turn, {self.game_inst.alive[self.game_inst.currentPlayer].name}")
+                print('hi')
+                choice_emb = discord.Embed(title=f"{self.game_inst.alive[self.game_inst.currentPlayer].name}'s turn",
+                                            description="here are your possible moves...\n0: Tax\n1: Assassinate\n2: Exchange\n3: Steal\n5: Income\n6: Foreign Aid\n7: Coup",
+                                            color=CHICKENCOLOR)
+                choice_msg = await self.game_channel.send(embed=choice_emb)
+                for num in NUMREACTS:
+                    await choice_msg.add_reaction(num)
+                
 client = GameClient()
 client.run(token)
