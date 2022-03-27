@@ -1,4 +1,5 @@
 from pydoc import describe
+from turtle import pos
 import discord
 import json
 from CoupGame import CoupGame
@@ -7,7 +8,8 @@ import asyncio
 auth = json.load(open('auth.json'))
 token = auth['discord-token']['token']
 
-NUMREACTS = ['0️⃣','1️⃣','2️⃣','3️⃣','5️⃣','6️⃣','7️⃣']
+NUMREACTS = ['0️⃣','1️⃣','2️⃣','3️⃣', '4', '5️⃣','6️⃣','7️⃣']
+ALLACTIONS = ['0: Tax', '1: Assassinate', '2: Exchange', '3: Steal', '4: blank', '5: Income', '6: Foreign Aid', '7: Coup']
 CHICKENCOLOR = 0xF4E8A4
 
 class GameClient(discord.Client):
@@ -86,15 +88,24 @@ class GameClient(discord.Client):
         await self.wait_until_ready()
         if self.game_running:
             while not self.is_closed():
-                print('hi')
                 await self.game_channel.send(f"it is now your turn, {self.game_inst.alive[self.game_inst.currentPlayer].name}")
-                print('hi')
+                posActs = self.game_inst.alive[self.game_inst.currentPlayer].getActions()
+                toDisplay = "\n".join([act for i, act in enumerate(ALLACTIONS) if i in posActs])
                 choice_emb = discord.Embed(title=f"{self.game_inst.alive[self.game_inst.currentPlayer].name}'s turn",
-                                            description="here are your possible moves...\n0: Tax\n1: Assassinate\n2: Exchange\n3: Steal\n5: Income\n6: Foreign Aid\n7: Coup",
+                                            description=f"here are your possible moves...\n{toDisplay}",
                                             color=CHICKENCOLOR)
                 choice_msg = await self.game_channel.send(embed=choice_emb)
-                for num in NUMREACTS:
-                    await choice_msg.add_reaction(num)
+                for i, num in enumerate(NUMREACTS):
+                    if i in posActs:
+                        await choice_msg.add_reaction(num)
+                
+                player_choice = 7 if len(posActs) == 1 else 5
+                try:
+                    reaction, user = await self.wait_for("reaction_add", check=lambda r, u: u == self.players[self.game_inst.currentPlayer] and str(r.emoji) in "".join(num for i, num in enumerate(NUMREACTS) if i in posActs), timeout=15)
+                except asyncio.TimeoutError:
+                    choice_emb = discord.Embed(title="D:", description="time's up! default choice is chosen for you", color=CHICKENCOLOR)
+                    await embm.edit(embed=q_emb)
+                    return
                 
 client = GameClient()
 client.run(token)

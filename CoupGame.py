@@ -1,3 +1,4 @@
+from turtle import pos
 from CoupDeck import CoupDeck
 from CoupPlayer import CoupPlayer
 
@@ -27,9 +28,12 @@ class CoupGame:
             self.alive[i].cards[0] = self.deck.draw()
             self.alive[i].cards[1] = self.deck.draw()
 
-    def takeTurn(self):
+    def takeTurn(self, action):
         player = self.alive[self.currentPlayer]
         possibleActions = player.getActions()
+
+        if action not in possibleActions:
+            return False
 
         if (3 in possibleActions and self.noSteal()):
             possibleActions.remove(3)
@@ -76,6 +80,7 @@ class CoupGame:
 
         self.currentPlayer += 1
         self.currentPlayer %= self.playerCount
+        return True
 
     def tax(self, player):
         player.coins += 3
