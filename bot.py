@@ -100,12 +100,19 @@ class GameClient(discord.Client):
                         await choice_msg.add_reaction(num)
                 
                 player_choice = 7 if len(posActs) == 1 else 5
+                print(player_choice)
+                print([num for i, num in enumerate(NUMREACTS) if i in posActs])
                 try:
-                    reaction, user = await self.wait_for("reaction_add", check=lambda r, u: u == self.players[self.game_inst.currentPlayer] and str(r.emoji) in "".join(num for i, num in enumerate(NUMREACTS) if i in posActs), timeout=15)
+                    reaction, user = await self.wait_for("reaction_add", check=lambda r, u: u.id == self.players[self.game_inst.currentPlayer].id and str(r.emoji) in [num for i, num in enumerate(NUMREACTS) if i in posActs], timeout=15)
                 except asyncio.TimeoutError:
                     choice_emb = discord.Embed(title="D:", description="time's up! default choice is chosen for you", color=CHICKENCOLOR)
-                    await embm.edit(embed=q_emb)
-                    return
+                    await choice_msg.edit(embed=choice_emb)
+                
+                if str(reaction.emoji) in [num for i, num in enumerate(NUMREACTS) if i in posActs]:
+                    player_choice = NUMREACTS.index(str(reaction.emoji))
+                
+                self.game_inst.takeTurn(player_choice)
+                print(player_choice)
                 
 client = GameClient()
 client.run(token)
