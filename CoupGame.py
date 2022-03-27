@@ -87,8 +87,8 @@ class CoupGame:
         player.coins += 2
 
     def steal(self, player, target):
-        player.coins += 2
-        target.coins -= 2
+        player.coins += min(2, target.coins)
+        target.coins -= min(2, target.coins)
 
     def exchange(self, player):
         newHand = []
