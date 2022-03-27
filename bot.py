@@ -299,12 +299,18 @@ class GameClient(discord.Client):
                     except asyncio.TimeoutError:
                         pass
 
+                    passed = False
+
                     if str(reaction.emoji) in '🧢':
                         self.challenged = self.game_inst.alive[[plyr.name for plyr in self.players].index(user.name)]
                         passed = await self.challenge(self.challenged, 3)
                     elif str(reaction.emoji) in '🍑':
                         self.challenged = self.game_inst.alive[[plyr.name for plyr in self.players].index(user.name)]
                         passed = await self.challenge(self.challenged, 2)
+
+                    if passed:
+                        inc()
+                        continue
 
                     self.game_inst.alive[self.game_inst.currentPlayer].coins += min(2, target.coins)
                     target.coins -= min(2, target.coins)
